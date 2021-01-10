@@ -1,0 +1,33 @@
+{
+  "user": {
+    "id": "1",
+    "name": "Addis Semagn",
+    "inventory": ["Onion", "Dinich", "Green Pepper"],
+    "groceryList": ["Onion", "Dinich"]
+  },
+  "cookbooks": {
+    "1": {
+      "title": "Mami's Cookbook",
+      "recipes": [
+        {
+          "id": "1",
+          "title": "Doro Wot",
+          "ingredients": ["Onion", "Spicy Stuff", "Garlic"],
+          "steps": ["Do this thing", "Then do that thing", "And then voila!"]
+        },
+        {
+          "id": "2",
+          "title": "Chicken + Potatoes",
+          "ingredients": ["Dinich", "Chicken"],
+          "steps": ["Do this thing", "Then do that thing", "And then voila!"]
+        },
+        {
+          "id": "3",
+          "title": "Fried Rice",
+          "ingredients": ["Dinich", "Chicken"],
+          "steps": ["Do this thing", "Then do that thing", "And then voila!"]
+        }
+      ]
+    }
+  }
+}
