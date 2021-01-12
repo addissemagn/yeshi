@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { removeIndexFromArray } from '../lib/utils';
+import ImageUpload from './ImageUpload';
 
 const RecipeForm = ({
   inventory,
@@ -108,7 +109,7 @@ const RecipeForm = ({
           <button onClick={() => toggleRecipeModal(false)}>✖️</button>
         </div>
         <h2 className="Pantry__title">Recipe</h2>
-        <button onClick={() => importRecipe()}>Import</button>
+        <ImageUpload onUpload={() => importRecipe()} />
         <div className="RecipeForm__section-header">
           <h3>Title</h3>
         </div>
