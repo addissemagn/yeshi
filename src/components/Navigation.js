@@ -8,7 +8,7 @@ const Button = ({ id, text, onClick, isActive}) => (
     onClick={onClick}
     className={
       isActive
-        ? "Navigation__button Navigation__button--active"
+        ? "Navigation__button Navigation__button-active"
         : "Navigation__button"
     }
   >
@@ -22,6 +22,7 @@ const Navigation = ({
   recipes,
   activeRecipe,
   recipeToSelect,
+  toggleRecipeModal
 }) => {
   const changeRecipe = (e) => {
     const recipeId = e.target.id;
@@ -51,6 +52,15 @@ const Navigation = ({
               </li>
             </Link>
           ))}
+          <li key="addButton">
+            <button
+              id="addButton"
+              onClick={() => toggleRecipeModal(true)}
+              className="Navigation__button Navigation__button-add"
+            >
+              ➕
+            </button>
+          </li>
         </ul>
       </nav>
     </div>

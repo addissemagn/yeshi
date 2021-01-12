@@ -34,9 +34,10 @@ const Pantry = ({ inventory, groceries, onAddToList, onDeleteFromList }) => {
 
   const getList = (items) => items.map((item, i) => (
     <li key={i} value={i}>
-      <span className="Recipe__ingredients__status green"></span>
-      {item}
-      <span onClick={() => deleteIngredient(i)}>  x</span>
+      <div className="RecipeForm__section-header highlight">
+        <span>{item}</span>
+        <span className="pointer" onClick={() => deleteIngredient(i)}>✖️</span>
+      </div>
     </li>
   ));
 

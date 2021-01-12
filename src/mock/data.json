@@ -1,13 +1,15 @@
 {
   "user": {
     "id": "1",
+    "cookbookIds": ["1"],
     "name": "Addis Semagn",
     "inventory": ["Onion", "Dinich", "Green Pepper"],
     "groceryList": ["Onion", "Dinich"]
   },
   "cookbooks": {
     "1": {
-      "title": "Mami's Cookbook",
+      "cookbookId": "1",
+      "title": "Yeshi's Kitchen",
       "recipes": [
         {
           "id": "1",

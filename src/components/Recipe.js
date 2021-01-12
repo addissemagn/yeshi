@@ -10,29 +10,41 @@ const Ingredient = ({ ingredient, i, haveIngredient }) => (
           : "Recipe__ingredients__status red"
       }
     ></span>
-    {ingredient}
+    <span className="">{ingredient}</span>
   </li>
 );
 
-const Step = ({ step, i }) => (<li key={i}>{step}</li>);
+const Step = ({ step, i }) => (<li className="pointer highlight" key={i}>{step}</li>);
 
-const Recipe = ({ recipe, inventory, onRecipeEdit, onRecipeDelete, onAddToList }) => {
+const Recipe = ({
+  recipe,
+  inventory,
+  groceryList,
+  onRecipeEdit,
+  onRecipeDelete,
+  onAddToList,
+}) => {
   const { title, ingredients, steps } = recipe;
 
-  const missingIngredients = [];
+  const missingInInventory = [];
+  const missingInGroceryList = [];
 
   const haveIngredient = (ingredient) => {
+    if (!groceryList.includes(ingredient)) {
+      missingInGroceryList.push(ingredient);
+    }
+
     if (inventory.includes(ingredient)) {
       return true;
     } else {
-      missingIngredients.push(ingredient);
+      missingInInventory.push(ingredient);
       return false;
     }
-  }
+  };
 
   const editRecipe = () => onRecipeEdit(recipe);
   const deleteRecipe = () => onRecipeDelete(recipe.id);
-  const addToGroceryList = () => onAddToList(missingIngredients, 'groceries');
+  const addToGroceryList = () => onAddToList(missingInInventory, "groceries");
 
   const ingredientsList = ingredients.map((ingredient, i) => (
     <Ingredient
@@ -55,19 +67,38 @@ const Recipe = ({ recipe, inventory, onRecipeEdit, onRecipeDelete, onAddToList }
       <ol className="Recipe__steps">{stepsList}</ol>
 
       <div className="Recipe__button-container">
-        <button className="Recipe__button first" onClick={addToGroceryList}>
-          Add to Grocery List
-        </button>
-        <button className="Recipe__button second" onClick={editRecipe}>
-          /
+        {missingInGroceryList.length > 0 ? (
+          <button className="Recipe__button first" onClick={addToGroceryList}>
+            Add to Grocery List
+          </button>
+        ) : (
+          <button
+            className="Recipe__button Recipe__button-success first"
+            onClick={addToGroceryList}
+          >
+            In Grocery List{" "}
+            <span role="img" aria-label="Check emoji">
+              ✔️
+            </span>
+          </button>
+        )}
+        <button
+          className="Recipe__button second"
+          onClick={editRecipe}
+        >
+          <span role="img" aria-label="edit">
+            🖋️
+          </span>
         </button>
         <button className="Recipe__button third" onClick={deleteRecipe}>
-          x
+          <span role="img" aria-label="delete">
+            ✖️
+          </span>
         </button>
       </div>
     </div>
   );
-}
+};
 
 Recipe.propTypes = {
   recipe: PropTypes.object.isRequired
