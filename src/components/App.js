@@ -6,7 +6,7 @@ import Login from './Login';
 
 
 const App = () => {
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(true)
 
   const onLogin = (params) => {
     console.log(params);

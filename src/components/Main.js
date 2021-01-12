@@ -29,6 +29,8 @@ import Pantry from './Pantry';
 const Main = ({ onLogout}) => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(); // search query for recipes
+  const mobileSize = window.matchMedia("(max-width: 600px)").matches
+
 
   // TODO: change the look of this, alternatively make models after switching to TS
   // const [user, setUser] = useState({});
@@ -140,6 +142,12 @@ const Main = ({ onLogout}) => {
     console.log(`Delete recipe, recipeId: ${id}, cookbookId: ${cookbook.cookbookId}`);
   }
 
+  const [showMobileNav, setShowMobileNav] = useState(false);
+
+  const toggleMobileNav = () => {
+      setShowMobileNav(!showMobileNav);
+  }
+
   if (selectedRecipeId) {
     const selectedRecipe = cookbook.recipes.filter(
       (recipe) => recipe.id === selectedRecipeId
@@ -159,22 +167,34 @@ const Main = ({ onLogout}) => {
                 <Link to="/">
                   <img src={logo} height="60px" alt="Logo" />
                 </Link>
-                <Link to="/pantry">Pantry</Link>
+                {!mobileSize ? (
+                  <Link to="/pantry">Pantry</Link>
+                ) : (
+                  <p className="pointer" onClick={() => onLogout()}>
+                    Logout
+                  </p>
+                )}
               </div>
               <h1 className="sidebar__title">{cookbook.title}</h1>
               <h3 className="sidebar__subtitle">Cookbook</h3>
-              <Navigation
-                query={query}
-                onQueryChange={handleQueryChange}
-                recipes={searchResults}
-                activeRecipe={selectedRecipeId}
-                recipeToSelect={selectNewRecipe}
-                toggleRecipeModal={setModalOpen}
-              />
-              <div className="sidebar__footer">
-                <p>Hi, {user.name.split(" ")[0]}!</p>
-                <p className="pointer" onClick={() => onLogout()}>Logout</p>
-              </div>
+              {!mobileSize && (
+                <span>
+                  <Navigation
+                    query={query}
+                    onQueryChange={handleQueryChange}
+                    recipes={searchResults}
+                    activeRecipe={selectedRecipeId}
+                    recipeToSelect={selectNewRecipe}
+                    toggleRecipeModal={setModalOpen}
+                  />
+                  <div className="sidebar__footer">
+                    <p>Hi, {user.name.split(" ")[0]}!</p>
+                    <p className="pointer" onClick={() => onLogout()}>
+                      Logout
+                    </p>
+                  </div>
+                </span>
+              )}
             </aside>
             {modalOpen && (
               <RecipeForm
@@ -182,28 +202,60 @@ const Main = ({ onLogout}) => {
                 toggleRecipeModal={setModalOpen}
               />
             )}
-            <Switch>
-              <Route exact path="/">
-                {recipeToSelect ? (
-                  <Recipe
-                    recipe={recipeToSelect}
-                    inventory={inventory}
-                    groceryList={groceryList}
-                    onRecipeEdit={onRecipeEdit}
-                    onRecipeDelete={onRecipeDelete}
-                    onAddToList={addIngredientsToList}
+            {(!mobileSize || (mobileSize && !showMobileNav)) &&
+              (
+                <Switch>
+                  <Route exact path="/">
+                    {recipeToSelect ? (
+                      <Recipe
+                        recipe={recipeToSelect}
+                        inventory={inventory}
+                        groceryList={groceryList}
+                        onRecipeEdit={onRecipeEdit}
+                        onRecipeDelete={onRecipeDelete}
+                        onAddToList={addIngredientsToList}
+                      />
+                    ) : null}
+                  </Route>
+                  <Route exact path="/pantry">
+                    <Pantry
+                      inventory={inventory}
+                      groceries={groceryList}
+                      onAddToList={addIngredientsToList}
+                      onDeleteFromList={deleteIngredientFromList}
+                    />
+                  </Route>
+                </Switch>
+              )}
+            {mobileSize && (
+              <span>
+                {showMobileNav && (
+                  <Navigation
+                    query={query}
+                    onQueryChange={handleQueryChange}
+                    recipes={searchResults}
+                    activeRecipe={selectedRecipeId}
+                    recipeToSelect={selectNewRecipe}
+                    toggleRecipeModal={setModalOpen}
                   />
-                ) : null}
-              </Route>
-              <Route exact path="/pantry">
-                <Pantry
-                  inventory={inventory}
-                  groceries={groceryList}
-                  onAddToList={addIngredientsToList}
-                  onDeleteFromList={deleteIngredientFromList}
-                />
-              </Route>
-            </Switch>
+                )}
+
+                <div className="MobileMenu__footer">
+                  {!showMobileNav ? (
+                    <span role="img" aria-label="search" onClick={() => toggleMobileNav()}>
+                        🔍 Recipies
+                    </span>
+                  ): (
+                    <span role="img" aria-label="close" onClick={() => toggleMobileNav()}>
+                        ✖️ Close
+                    </span>
+                  )}
+                  <span role="img" aria-label="pantry" onClick={() => setShowMobileNav(false)}>
+                    <Link to="/pantry">Pantry</Link>
+                  </span>
+                </div>
+              </span>
+            )}
           </div>
         </Router>
       )}
