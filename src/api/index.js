@@ -100,6 +100,27 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  uploadRecipeImage: async (file, token) => {
+    let formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/ocr/recipe`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          // "Content-Type": "multipart/form-data; boundary=<calculated when request is sent>",
+          token: token,
+        },
+      });
+
+      const recipeDetected = await res.json();
+      return recipeDetected;
+    } catch (err) {
+      console.log(err);
+    }
+
   }
 };
 

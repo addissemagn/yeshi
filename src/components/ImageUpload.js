@@ -7,7 +7,7 @@ const ImageUpload = ({ onUpload }) => {
     if (e.target.files && e.target.files[0]) {
       let img = e.target.files[0];
       setImage(URL.createObjectURL(img))
-      onUpload();
+      onUpload(e.target.files[0]);
     }
   };
 

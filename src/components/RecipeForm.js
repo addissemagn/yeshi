@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 
 import { removeIndexFromArray } from '../lib';
 import ImageUpload from './ImageUpload';
+import api from '../api';
 
 const RecipeForm = ({
-  inventory,
-  groceries,
   onAddToList,
   onDeleteFromList,
   toggleRecipeModal,
   initialRecipe,
   onSubmit,
+  onRecipeImageUpload,
+  recipeParams,
+  setRecipeParams,
 }) => {
   const [activeTab, setActiveTab] = useState("groceries");
   const [ingredientToAdd, setIngredientToAdd] = useState("");
@@ -33,24 +35,6 @@ const RecipeForm = ({
         <span onClick={() => deleteIngredient(i)}> x</span>
       </li>
     ));
-
-  const [recipeParams, setRecipeParams] = useState(initialRecipe);
-
-  // TODO: add google vision here
-  const importRecipe = () => {
-    const sampleRecipe = {
-      title: "Yummy Soup",
-      ingredients: ["Onions", "Testing"],
-      steps: ["Do this", "Then that"],
-    }
-
-    setRecipeParams(sampleRecipe);
-    // setRecipeParams({
-    //   title: sampleRecipe.title,
-    //   ingredients: recipeParams.ingredients.concat(sampleRecipe.ingredients),
-    //   steps: recipeParams.steps.concat(sampleRecipe.steps),
-    // });
-  }
 
   const onRecipeChange = (e) => {
     const { id, value } = e.target;
@@ -108,7 +92,7 @@ const RecipeForm = ({
           </button>
         </div>
         <h2 className="Pantry__title">Recipe</h2>
-        <ImageUpload onUpload={() => importRecipe()} />
+        <ImageUpload onUpload={onRecipeImageUpload} />
         <div className="RecipeForm__section-header">
           <h3>Title</h3>
         </div>

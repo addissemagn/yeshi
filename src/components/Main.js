@@ -162,6 +162,26 @@ const Main = ({ user, onLogout }) => {
     setShowMobileNav(!showMobileNav);
   };
 
+  const [recipeParams, setRecipeParams] = useState(initialRecipe);
+
+  // TODO: add google vision here
+  const onRecipeImageUpload = async (image) => {
+    const sampleRecipe = {
+      title: "Yummy Soup",
+      ingredients: ["Onions", "Testing"],
+      steps: ["Do this", "Then that"],
+    }
+    const recipe = await api.uploadRecipeImage(image, token)
+    if (recipe){
+      setRecipeParams({
+        ...recipe,
+        ...(!recipe.title && { title: "" }),
+        ...(!recipe.ingredients && { ingredients: [] }),
+        ...(!recipe.steps && { steps: [] }),
+      });
+    }
+  }
+
   return (
     <div>
       {!loading && (
@@ -206,6 +226,9 @@ const Main = ({ user, onLogout }) => {
                 initialRecipe={initialRecipe}
                 toggleRecipeModal={setModalOpen}
                 onSubmit={onCreateRecipe}
+                onRecipeImageUpload={onRecipeImageUpload}
+                recipeParams={recipeParams}
+                setRecipeParams={setRecipeParams}
               />
             )}
             {(!mobileSize || (mobileSize && !showMobileNav)) && (
