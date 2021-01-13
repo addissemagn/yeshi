@@ -5,3 +5,4 @@ build
 node_modules
 NOTES.md
 README.md
+.env

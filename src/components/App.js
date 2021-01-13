@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import _ from 'lodash';
 
-import { api } from '../api';
+import api from '../api';
 import { getCookie, eraseCookie, validateLoginParams, getUser } from '../lib';
 
 import Main from './Main';
@@ -25,9 +25,9 @@ const App = () => {
       if (token) {
         const user = await api.getUser(token);
 
-        if (user.message) {
+        if (user && user.message) {
           setParamsError("Session expired. Please login again.")
-        } else {
+        } else if (user) {
           setUser(user);
           setLoggedIn(true);
         }
@@ -48,7 +48,10 @@ const App = () => {
     } else {
       const auth = await api.login(params);
 
-      if(auth.message) {
+      if(!auth) {
+        setParamsError("Internal server error")
+      }
+      else if (auth.message) {
         setParamsError(auth.message)
       } else {
         if (auth.token) {

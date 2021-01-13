@@ -1,10 +1,7 @@
-// const REACT_APP_API_URL = "https://yeshi-api.netlify.app";
-const REACT_APP_API_URL = "http://localhost:5000";
-
-export const api = {
+const api = {
   login: async (params) => {
     try {
-      const res = await fetch(`${REACT_APP_API_URL}/login`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
         method: "POST",
         body: JSON.stringify(params),
         headers: {
@@ -21,7 +18,7 @@ export const api = {
   // Gets logged in user
   getUser: async (token) => {
     try {
-      const res = await fetch(`${REACT_APP_API_URL}/user`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/user`, {
         method: "GET",
         headers: {
           token: token,
@@ -36,7 +33,7 @@ export const api = {
   },
   getCookbookById: async (id, token) => {
     try {
-      const res = await fetch(`${REACT_APP_API_URL}/cookbook/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/cookbook/${id}`, {
         method: "GET",
         headers: {
           token: token,
@@ -55,7 +52,7 @@ export const api = {
       const params = {
         list: list
       }
-      const res = await fetch(`${REACT_APP_API_URL}/list/${type}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/list/${type}`, {
         method: "PATCH",
         body: JSON.stringify(params),
         headers: {
@@ -72,7 +69,7 @@ export const api = {
   },
   addRecipeToCookbook: async (cookbookId, params, token) => {
     try {
-      const res = await fetch(`${REACT_APP_API_URL}/cookbook/${cookbookId}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/cookbook/${cookbookId}`, {
         method: "POST",
         body: JSON.stringify({ recipe: params }),
         headers: {
@@ -89,7 +86,7 @@ export const api = {
   },
   deleteRecipeByIndex: async (cookbookId, recipeIndex, token) => {
     try {
-      const res = await fetch(`${REACT_APP_API_URL}/cookbook/${cookbookId}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/cookbook/${cookbookId}`, {
         method: "DELETE",
         body: JSON.stringify({ recipeIndex: recipeIndex }),
         headers: {
@@ -105,3 +102,5 @@ export const api = {
     }
   }
 };
+
+export default api;

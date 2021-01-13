@@ -4,7 +4,7 @@ import _ from "lodash";
 
 import logo from "../assets/cooking.svg";
 
-import { api } from "../api";
+import api from "../api";
 import { removeIndexFromArray, getCookie } from "../lib";
 
 import Recipe from "./Recipe";
