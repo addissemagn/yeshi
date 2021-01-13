@@ -1,106 +1,106 @@
-import React, { useState, useEffect } from 'react';
-// import { connect } from 'react-redux';
-import _ from 'lodash';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from "react-router-dom";
-import logo from '../assets/cooking.svg';
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import _ from "lodash";
 
-import {
-  addRecipe,
-  editRecipe,
-  deleteRecipe
-} from "../store/actions";
+import logo from "../assets/cooking.svg";
 
-import data from '../mock/data.json';
-import { removeIndexFromArray } from '../lib/utils';
+import { api } from "../api";
+import { removeIndexFromArray, getCookie } from "../lib";
 
-import Recipe from './Recipe';
-import RecipeForm from './RecipeForm';
-import Navigation from './Navigation';
-import Pantry from './Pantry';
+import Recipe from "./Recipe";
+import RecipeForm from "./RecipeForm";
+import Navigation from "./Navigation";
+import Pantry from "./Pantry";
 
 
-// NOTE: funcational vs class components difference?
-// NOTE: consider changing to TS
-const Main = ({ onLogout}) => {
+const Main = ({ user, onLogout }) => {
+  const mobileSize = window.matchMedia("(max-width: 600px)").matches;
+  const [token, setToken] = useState(getCookie("token"));
+
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState(); // search query for recipes
-  const mobileSize = window.matchMedia("(max-width: 600px)").matches
+  const [query, setQuery] = useState();
+  const [cookbook, setCookbook] = useState({});
 
-
-  // TODO: change the look of this, alternatively make models after switching to TS
-  // const [user, setUser] = useState({});
-  // const [cookbook, setCookbook] = useState({});
-  let user, cookbook;
-  user = data.user;
-  cookbook = data.cookbooks["1"]
+  const [inventory, setInventory] = useState([]);
+  const [groceryList, setGroceryList] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedRecipeId, setSelectedRecipeId] = useState("1");
 
   useEffect(() => {
-    getUser();
-    getCookbooks()
-    setLoading(false);
-  }, [])
+    // TODO: Get all cookbooks user is subscribed to, right now only first
+    const fetchCookbooks = async () => {
+      if (user.cookbookIds && user.cookbookIds.length > 0) {
+        const res = await api.getCookbookById(user.cookbookIds[0], token);
+        setCookbook(res);
+        setSearchResults(res.recipes);
+      }
 
-  const getUser = async () => {
-    console.log("GET /user")
-    user = data.user;
-  }
+      setLoading(false);
+    };
 
-  // TODO: get multiple cookbooks, right now only one
-  const getCookbooks = async () => {
-    console.log("GET /cookbook/:id")
-    cookbook = data.cookbooks["1"]
-  }
+    if (Object.keys(user).length > 0) {
+      fetchCookbooks();
+      setInventory(user.inventory);
+      setGroceryList(user.groceryList);
+    }
+  }, [user]);
 
-  const [inventory, setInventory] = useState(user.inventory);
-  const [groceryList, setGroceryList] = useState(user.groceryList)
+  // After cookbook is initialized
+  useEffect(() => {
+    if (cookbook.recipes && cookbook.recipes.length > 0) {
+      const recipeToShow = cookbook.recipes[0].id || null;
+      setSelectedRecipeId(recipeToShow);
+    }
+  }, [cookbook]);
 
-  const [selectedRecipeId, setSelectedRecipeId] = useState("1");
-  const [searchResults, setSearchResults] = useState(cookbook.recipes);
+  // On recipe select change
+  useEffect(() => {
+    if (selectedRecipeId && cookbook.recipes) {
+      const selectedRecipe = cookbook.recipes.filter(
+        (recipe) => recipe.id === selectedRecipeId
+      );
+      if (selectedRecipe.length > 0) {
+        recipeToSelect = selectedRecipe[0];
+      }
+      recipeToSelect = {
+        id: "1",
+        title: "Doro Wot",
+        ingredients: ["Onion", "Spicy Stuff", "Garlic"],
+        steps: ["Do this thing", "Then do that thing", "And then voila!"],
+      };
+    }
+  }, [selectedRecipeId]);
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  // TODO: add endpoints; move to actions/index.js
-  const addIngredientsToList = (ingredients, listName) => {
+  const addIngredientsToList = async (ingredients, listName) => {
     const list = listName === "inventory" ? inventory : groceryList;
 
-    // BUG: Adding Test and Test2 doesn't work
-    const missingInList = _.differenceBy(ingredients, list, 0);
+    const missingInList = _.difference(ingredients, list);
     const updatedList = list.concat(missingInList);
 
     if (missingInList.length > 0) {
-      if(listName === "inventory") {
-        console.log("PATCH /list/inventory: ", updatedList)
-        setInventory(updatedList);
+      const res = await api.updateList(listName, updatedList, token);
+
+      if (listName === "inventory") {
+        setInventory(res.inventory);
       } else if (listName === "groceries") {
-        console.log("PATCH /list/groceries: ", updatedList)
-        setGroceryList(updatedList);
+        setGroceryList(res.groceryList);
       }
     }
-  }
+  };
 
-  // TODO: add endpoints; move to actions/index.js
-  const deleteIngredientFromList = (index, listName) => {
+  const deleteIngredientFromList = async (index, listName) => {
     const list = listName === "inventory" ? inventory : groceryList;
     const updatedList = removeIndexFromArray(list, index);
+    const res = await api.updateList(listName, updatedList, token);
 
-    if(listName === "inventory") {
-      console.log("PATCH /list/inventory: ", updatedList)
-      setInventory(updatedList);
+    if (listName === "inventory") {
+      setInventory(res.inventory);
     } else if (listName === "groceries") {
-      console.log("PATCH /list/groceries: ", updatedList)
-      setGroceryList(updatedList);
+      setGroceryList(res.groceryList);
     }
-  }
-
-  useEffect(() => {
-    const recipeToShow = cookbook.recipes[0].id || null;
-    setSelectedRecipeId(recipeToShow);
-  }, []);
+  };
 
   useEffect(() => {
     if (query) {
@@ -130,35 +130,38 @@ const Main = ({ onLogout}) => {
     title: "",
     ingredients: [""],
     steps: [""],
-  })
+  });
 
   const onRecipeEdit = (recipe) => {
-    console.log(`Edit recipe, recipeId: ${recipe.id}, cookbookId: ${cookbook.cookbookId}`);
+    console.log(
+      `Edit recipe, recipeId: ${recipe.id}, cookbookId: ${cookbook.cookbookId}`
+    );
     setInitialRecipe(recipe);
     setModalOpen(true);
-  }
+  };
 
   const onRecipeDelete = (id) => {
-    console.log(`Delete recipe, recipeId: ${id}, cookbookId: ${cookbook.cookbookId}`);
+    console.log(
+      `Delete recipe, recipeId: ${id}, cookbookId: ${cookbook.cookbookId}`
+    );
+  };
+
+  const onCreateRecipe = async (e, recipeParams) => {
+    e.preventDefault()
+
+    const updatedCookbook = await api.addRecipeToCookbook(cookbook.cookbookId, recipeParams, token);
+    setCookbook(updatedCookbook);
+    setModalOpen(false);
   }
 
   const [showMobileNav, setShowMobileNav] = useState(false);
 
   const toggleMobileNav = () => {
-      setShowMobileNav(!showMobileNav);
-  }
-
-  if (selectedRecipeId) {
-    const selectedRecipe = cookbook.recipes.filter(
-      (recipe) => recipe.id === selectedRecipeId
-    );
-    if (selectedRecipe.length > 0) {
-      recipeToSelect = selectedRecipe[0];
-    }
-  }
+    setShowMobileNav(!showMobileNav);
+  };
 
   return (
-    <container>
+    <div>
       {!loading && (
         <Router>
           <div className="App">
@@ -200,33 +203,33 @@ const Main = ({ onLogout}) => {
               <RecipeForm
                 initialRecipe={initialRecipe}
                 toggleRecipeModal={setModalOpen}
+                onSubmit={onCreateRecipe}
               />
             )}
-            {(!mobileSize || (mobileSize && !showMobileNav)) &&
-              (
-                <Switch>
-                  <Route exact path="/">
-                    {recipeToSelect ? (
-                      <Recipe
-                        recipe={recipeToSelect}
-                        inventory={inventory}
-                        groceryList={groceryList}
-                        onRecipeEdit={onRecipeEdit}
-                        onRecipeDelete={onRecipeDelete}
-                        onAddToList={addIngredientsToList}
-                      />
-                    ) : null}
-                  </Route>
-                  <Route exact path="/pantry">
-                    <Pantry
+            {(!mobileSize || (mobileSize && !showMobileNav)) && (
+              <Switch>
+                <Route exact path="/">
+                  {recipeToSelect ? (
+                    <Recipe
+                      recipe={recipeToSelect}
                       inventory={inventory}
-                      groceries={groceryList}
+                      groceryList={groceryList}
+                      onRecipeEdit={onRecipeEdit}
+                      onRecipeDelete={onRecipeDelete}
                       onAddToList={addIngredientsToList}
-                      onDeleteFromList={deleteIngredientFromList}
                     />
-                  </Route>
-                </Switch>
-              )}
+                  ) : null}
+                </Route>
+                <Route exact path="/pantry">
+                  <Pantry
+                    inventory={inventory}
+                    groceries={groceryList}
+                    onAddToList={addIngredientsToList}
+                    onDeleteFromList={deleteIngredientFromList}
+                  />
+                </Route>
+              </Switch>
+            )}
             {mobileSize && (
               <span>
                 {showMobileNav && (
@@ -242,15 +245,27 @@ const Main = ({ onLogout}) => {
 
                 <div className="MobileMenu__footer">
                   {!showMobileNav ? (
-                    <span role="img" aria-label="search" onClick={() => toggleMobileNav()}>
-                        🔍 Recipies
+                    <span
+                      role="img"
+                      aria-label="search"
+                      onClick={() => toggleMobileNav()}
+                    >
+                      🔍 Recipies
                     </span>
-                  ): (
-                    <span role="img" aria-label="close" onClick={() => toggleMobileNav()}>
-                        ✖️ Close
+                  ) : (
+                    <span
+                      role="img"
+                      aria-label="close"
+                      onClick={() => toggleMobileNav()}
+                    >
+                      ✖️ Close
                     </span>
                   )}
-                  <span role="img" aria-label="pantry" onClick={() => setShowMobileNav(false)}>
+                  <span
+                    role="img"
+                    aria-label="pantry"
+                    onClick={() => setShowMobileNav(false)}
+                  >
                     <Link to="/pantry">Pantry</Link>
                   </span>
                 </div>
@@ -259,8 +274,8 @@ const Main = ({ onLogout}) => {
           </div>
         </Router>
       )}
-    </container>
+    </div>
   );
-}
+};
 
 export default Main;

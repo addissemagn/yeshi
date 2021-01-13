@@ -1,1 +1,0 @@
-export const removeIndexFromArray = (arr, index) => arr.filter((val, i) => i !== index);

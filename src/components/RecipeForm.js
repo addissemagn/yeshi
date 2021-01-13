@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 
-import { removeIndexFromArray } from '../lib/utils';
+import { removeIndexFromArray } from '../lib';
 import ImageUpload from './ImageUpload';
 
 const RecipeForm = ({
@@ -11,6 +10,7 @@ const RecipeForm = ({
   onDeleteFromList,
   toggleRecipeModal,
   initialRecipe,
+  onSubmit,
 }) => {
   const [activeTab, setActiveTab] = useState("groceries");
   const [ingredientToAdd, setIngredientToAdd] = useState("");
@@ -52,11 +52,6 @@ const RecipeForm = ({
     // });
   }
 
-  const onSubmit = (e) => {
-    e.preventDefault()
-    console.log(recipeParams);
-  }
-
   const onRecipeChange = (e) => {
     const { id, value } = e.target;
     const key = id.split("_")[0];
@@ -88,12 +83,12 @@ const RecipeForm = ({
   const addToRecipe = (key) => {
     const list = recipeParams[key];
 
-    if (!list || list.length == 0) {
+    if (!list || list.length === 0) {
       setRecipeParams({
         ...recipeParams,
         [key]: [""],
       });
-    } else if (list[list.length - 1] != "") {
+    } else if (list[list.length - 1] !== "") {
       setRecipeParams({
         ...recipeParams,
         [key]: list.concat([""]),
@@ -103,10 +98,14 @@ const RecipeForm = ({
 
   return (
     <div className="RecipeForm">
-      <form onSubmit={onSubmit}>
+      <form onSubmit={(e) => onSubmit(e, recipeParams)}>
         <div className="RecipeForm__section-header">
           <h3> </h3>
-          <button onClick={() => toggleRecipeModal(false)}>✖️</button>
+          <button onClick={() => toggleRecipeModal(false)}>
+            <span role="img" aria-label="delete">
+              ✖️
+            </span>
+          </button>
         </div>
         <h2 className="Pantry__title">Recipe</h2>
         <ImageUpload onUpload={() => importRecipe()} />
@@ -123,7 +122,11 @@ const RecipeForm = ({
         />
         <div className="RecipeForm__section-header">
           <h3>Ingredients</h3>
-          <button onClick={() => addToRecipe("ingredients")}>➕</button>
+          <button onClick={() => addToRecipe("ingredients")}>
+            <span role="img" aria-label="add">
+              ➕
+            </span>
+          </button>
         </div>
         {recipeParams.ingredients.map((ingredient, i) => (
           <div className="RecipeForm__item">
@@ -136,7 +139,9 @@ const RecipeForm = ({
               onChange={onRecipeChange}
             />
             <button onClick={() => removeItem("ingredients", i)}>
-                <span role="img" aria-label="delete step">✖️</span>
+              <span role="img" aria-label="delete step">
+                ✖️
+              </span>
             </button>
           </div>
         ))}
@@ -155,13 +160,15 @@ const RecipeForm = ({
               onChange={onRecipeChange}
             />
             <button onClick={() => removeItem("steps", i)}>
-                <span role="img" aria-label="delete step">✖️</span>
+              <span role="img" aria-label="delete step">
+                ✖️
+              </span>
             </button>
           </div>
         ))}
         <button
           className="Recipe__button Navigation__button-active mt-22"
-          onClick={onSubmit}
+          onClick={(e) => onSubmit(e, recipeParams)}
         >
           Submit
         </button>
