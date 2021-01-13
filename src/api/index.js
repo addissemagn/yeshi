@@ -86,5 +86,22 @@ export const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  deleteRecipeByIndex: async (cookbookId, recipeIndex, token) => {
+    try {
+      const res = await fetch(`${REACT_APP_API_URL}/cookbook/${cookbookId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ recipeIndex: recipeIndex }),
+        headers: {
+          "Content-Type": "application/json",
+          token: token,
+        },
+      });
+
+      const updatedCookbook = await res.json();
+      return updatedCookbook;
+    } catch (err) {
+      console.log(err);
+    }
   }
 };

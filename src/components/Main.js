@@ -24,7 +24,6 @@ const Main = ({ user, onLogout }) => {
   const [inventory, setInventory] = useState([]);
   const [groceryList, setGroceryList] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedRecipeId, setSelectedRecipeId] = useState("1");
 
   useEffect(() => {
     // TODO: Get all cookbooks user is subscribed to, right now only first
@@ -45,31 +44,28 @@ const Main = ({ user, onLogout }) => {
     }
   }, [user]);
 
+  const [selectedRecipe, setSelectedRecipe] = useState({})
+  // FIXME: Initialize from first in cookbook recipies not hard coded ID
+  const [selectedRecipeIndex, setSelectedRecipeIndex] = useState("1");
+
+  const selectNewRecipe = (recipeId) => {
+    if (recipeId) {
+      setSelectedRecipeIndex(recipeId);
+    }
+  };
+
   // After cookbook is initialized
   useEffect(() => {
     if (cookbook.recipes && cookbook.recipes.length > 0) {
-      const recipeToShow = cookbook.recipes[0].id || null;
-      setSelectedRecipeId(recipeToShow);
-    }
-  }, [cookbook]);
 
-  // On recipe select change
-  useEffect(() => {
-    if (selectedRecipeId && cookbook.recipes) {
       const selectedRecipe = cookbook.recipes.filter(
-        (recipe) => recipe.id === selectedRecipeId
+        (recipe) => recipe.id === selectedRecipeIndex
       );
       if (selectedRecipe.length > 0) {
-        recipeToSelect = selectedRecipe[0];
+        setSelectedRecipe(selectedRecipe[0]);
       }
-      recipeToSelect = {
-        id: "1",
-        title: "Doro Wot",
-        ingredients: ["Onion", "Spicy Stuff", "Garlic"],
-        steps: ["Do this thing", "Then do that thing", "And then voila!"],
-      };
     }
-  }, [selectedRecipeId]);
+  }, [cookbook, selectedRecipeIndex]);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -113,14 +109,6 @@ const Main = ({ user, onLogout }) => {
     }
   }, [query]);
 
-  const selectNewRecipe = (recipeId) => {
-    if (recipeId) {
-      setSelectedRecipeId(recipeId);
-    }
-  };
-
-  let recipeToSelect;
-
   const handleQueryChange = (e) => {
     const { value } = e.target;
     setQuery(value);
@@ -140,10 +128,22 @@ const Main = ({ user, onLogout }) => {
     setModalOpen(true);
   };
 
-  const onRecipeDelete = (id) => {
-    console.log(
-      `Delete recipe, recipeId: ${id}, cookbookId: ${cookbook.cookbookId}`
-    );
+  const getIndexInRecipeList = (id) => {
+    // FIXME: Likely a much more efficient way to do this (like storing the id with the index or fixing the endpoint's funcionality) but my brain is on the 1AM mode
+    for (var i = 0; i < cookbook.recipes.length; i += 1) {
+      if (cookbook.recipes[i].id == id) {
+        return i;
+      }
+    }
+  }
+
+  // TODO: Add error handling
+  const onRecipeDelete = async (id) => {
+    const index = getIndexInRecipeList(id);
+    const updatedCookbook = await api.deleteRecipeByIndex(cookbook.cookbookId, index, token);
+    setCookbook(updatedCookbook);
+    // FIXME: This shouldn't be necessary for the updated cookbook to be reflected
+    window.location.reload();
   };
 
   const onCreateRecipe = async (e, recipeParams) => {
@@ -152,6 +152,8 @@ const Main = ({ user, onLogout }) => {
     const updatedCookbook = await api.addRecipeToCookbook(cookbook.cookbookId, recipeParams, token);
     setCookbook(updatedCookbook);
     setModalOpen(false);
+    // FIXME: This shouldn't be necessary for the updated cookbook to be reflected
+    window.location.reload();
   }
 
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -186,7 +188,7 @@ const Main = ({ user, onLogout }) => {
                     query={query}
                     onQueryChange={handleQueryChange}
                     recipes={searchResults}
-                    activeRecipe={selectedRecipeId}
+                    activeRecipe={selectedRecipeIndex}
                     recipeToSelect={selectNewRecipe}
                     toggleRecipeModal={setModalOpen}
                   />
@@ -209,9 +211,9 @@ const Main = ({ user, onLogout }) => {
             {(!mobileSize || (mobileSize && !showMobileNav)) && (
               <Switch>
                 <Route exact path="/">
-                  {recipeToSelect ? (
+                  {Object.keys(selectedRecipe).length > 0 ? (
                     <Recipe
-                      recipe={recipeToSelect}
+                      recipe={selectedRecipe}
                       inventory={inventory}
                       groceryList={groceryList}
                       onRecipeEdit={onRecipeEdit}
@@ -237,7 +239,7 @@ const Main = ({ user, onLogout }) => {
                     query={query}
                     onQueryChange={handleQueryChange}
                     recipes={searchResults}
-                    activeRecipe={selectedRecipeId}
+                    activeRecipe={selectedRecipeIndex}
                     recipeToSelect={selectNewRecipe}
                     toggleRecipeModal={setModalOpen}
                   />
