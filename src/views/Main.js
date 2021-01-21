@@ -5,12 +5,12 @@ import _ from "lodash";
 import logo from "../assets/cooking.svg";
 
 import api from "../api";
-import { removeIndexFromArray, getCookie } from "../lib";
+import { removeIndexFromArray, getCookie, validateRecipe } from "../lib";
 
-import Recipe from "./Recipe";
-import RecipeForm from "./RecipeForm";
-import Navigation from "./Navigation";
-import Pantry from "./Pantry";
+import Recipe from "../components/Recipe";
+import RecipeForm from "../components/RecipeForm";
+import Navigation from "../components/Navigation";
+import Pantry from "../components/Pantry";
 
 
 const Main = ({ user, onLogout }) => {
@@ -25,12 +25,33 @@ const Main = ({ user, onLogout }) => {
   const [groceryList, setGroceryList] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
 
+  const [initialRecipe, setInitialRecipe] = useState({
+    title: "",
+    ingredients: [""],
+    steps: [""],
+  });
+
+  const [recipeParams, setRecipeParams] = useState(initialRecipe);
+  const [recipeParamsErrors, setRecipeParamsErrors] = useState({
+    title: '',
+    ingredients: '',
+    steps: '',
+  })
+
+  const [selectedRecipe, setSelectedRecipe] = useState({})
+  const [selectedRecipeId, setSelectedRecipeId] = useState(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
+
   useEffect(() => {
     // TODO: Get all cookbooks user is subscribed to, right now only first
     const fetchCookbooks = async () => {
       if (user.cookbookIds && user.cookbookIds.length > 0) {
         const res = await api.getCookbookById(user.cookbookIds[0], token);
         setCookbook(res);
+        // Initialize to first recipe
+        setSelectedRecipeId(res.recipes && res.recipes.length > 0 && res.recipes[0].id || null);
         setSearchResults(res.recipes);
       }
 
@@ -44,30 +65,36 @@ const Main = ({ user, onLogout }) => {
     }
   }, [user]);
 
-  const [selectedRecipe, setSelectedRecipe] = useState({})
-  // FIXME: Initialize from first in cookbook recipies not hard coded ID
-  const [selectedRecipeIndex, setSelectedRecipeIndex] = useState("1");
-
-  const selectNewRecipe = (recipeId) => {
-    if (recipeId) {
-      setSelectedRecipeIndex(recipeId);
-    }
-  };
-
   // After cookbook is initialized
   useEffect(() => {
     if (cookbook.recipes && cookbook.recipes.length > 0) {
-
       const selectedRecipe = cookbook.recipes.filter(
-        (recipe) => recipe.id === selectedRecipeIndex
+        (recipe) => recipe.id === selectedRecipeId
       );
       if (selectedRecipe.length > 0) {
         setSelectedRecipe(selectedRecipe[0]);
       }
     }
-  }, [cookbook, selectedRecipeIndex]);
+  }, [cookbook, selectedRecipeId]);
 
-  const [modalOpen, setModalOpen] = useState(false);
+  // Searching recipes
+  useEffect(() => {
+    if (query) {
+      const filteredRecipes = cookbook.recipes.filter((recipe) =>
+        recipe.title.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(filteredRecipes);
+    } else {
+      setSearchResults(cookbook.recipes);
+    }
+  }, [query]);
+
+  const selectNewRecipe = (recipeId) => {
+    if (recipeId) {
+      setSelectedRecipeId(recipeId);
+      setModalOpen(false);
+    }
+  };
 
   const addIngredientsToList = async (ingredients, listName) => {
     const list = listName === "inventory" ? inventory : groceryList;
@@ -98,27 +125,10 @@ const Main = ({ user, onLogout }) => {
     }
   };
 
-  useEffect(() => {
-    if (query) {
-      const filteredRecipes = cookbook.recipes.filter((recipe) =>
-        recipe.title.toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filteredRecipes);
-    } else {
-      setSearchResults(cookbook.recipes);
-    }
-  }, [query]);
-
   const handleQueryChange = (e) => {
     const { value } = e.target;
     setQuery(value);
   };
-
-  const [initialRecipe, setInitialRecipe] = useState({
-    title: "",
-    ingredients: [""],
-    steps: [""],
-  });
 
   const onRecipeEdit = (recipe) => {
     console.log(
@@ -128,49 +138,60 @@ const Main = ({ user, onLogout }) => {
     setModalOpen(true);
   };
 
-  const getIndexInRecipeList = (id) => {
-    // FIXME: Likely a much more efficient way to do this (like storing the id with the index or fixing the endpoint's funcionality) but my brain is on the 1AM mode
-    for (var i = 0; i < cookbook.recipes.length; i += 1) {
-      if (cookbook.recipes[i].id == id) {
-        return i;
-      }
-    }
-  }
-
   // TODO: Add error handling
   const onRecipeDelete = async (id) => {
+    const getIndexInRecipeList = (id) => {
+      // FIXME: Likely a much more efficient way to do this (like storing the id with the index or fixing the endpoint's funcionality) but my brain is on the 1AM mode
+      for (var i = 0; i < cookbook.recipes.length; i += 1) {
+        if (cookbook.recipes[i].id == id) {
+          return i;
+        }
+      }
+    }
+
     const index = getIndexInRecipeList(id);
     const updatedCookbook = await api.deleteRecipeByIndex(cookbook.cookbookId, index, token);
     setCookbook(updatedCookbook);
-    // FIXME: This shouldn't be necessary for the updated cookbook to be reflected
     window.location.reload();
   };
 
   const onCreateRecipe = async (e, recipeParams) => {
     e.preventDefault()
+    setRecipeParamsErrors({});
 
-    const updatedCookbook = await api.addRecipeToCookbook(cookbook.cookbookId, recipeParams, token);
-    setCookbook(updatedCookbook);
-    setModalOpen(false);
-    // FIXME: This shouldn't be necessary for the updated cookbook to be reflected
-    window.location.reload();
+    const errs = validateRecipe(recipeParams);
+
+
+    if(Object.keys(errs).length > 0) {
+      setRecipeParamsErrors(errs);
+    } else {
+      const updatedCookbook = await api.addRecipeToCookbook(cookbook.cookbookId, recipeParams, token);
+      setCookbook(updatedCookbook);
+      setModalOpen(false);
+      window.location.reload();
+    }
   }
-
-  const [showMobileNav, setShowMobileNav] = useState(false);
 
   const toggleMobileNav = () => {
     setShowMobileNav(!showMobileNav);
   };
 
-  const [recipeParams, setRecipeParams] = useState(initialRecipe);
-
-  // TODO: add google vision here
-  const onRecipeImageUpload = async (image) => {
-    const sampleRecipe = {
-      title: "Yummy Soup",
-      ingredients: ["Onions", "Testing"],
-      steps: ["Do this", "Then that"],
+  const onUploadImageToRecipe = async (files) => {
+    console.log(files)
+    if (files && files.length > 0) {
+      const updatedCookbook = await api.uploadImagesToRecipe(
+        cookbook.cookbookId,
+        files,
+        token
+      );
+      setCookbook(updatedCookbook)
+      window.location.reload();
     }
+  }
+
+  const onRecipeImageUpload = async (image) => {
+    setRecipeParamsErrors({});
+
     const recipe = await api.uploadRecipeImage(image, token)
     if (recipe){
       setRecipeParams({
@@ -208,7 +229,7 @@ const Main = ({ user, onLogout }) => {
                     query={query}
                     onQueryChange={handleQueryChange}
                     recipes={searchResults}
-                    activeRecipe={selectedRecipeIndex}
+                    activeRecipe={selectedRecipeId}
                     recipeToSelect={selectNewRecipe}
                     toggleRecipeModal={setModalOpen}
                   />
@@ -221,17 +242,9 @@ const Main = ({ user, onLogout }) => {
                 </span>
               )}
             </aside>
-            {modalOpen && (
-              <RecipeForm
-                initialRecipe={initialRecipe}
-                toggleRecipeModal={setModalOpen}
-                onSubmit={onCreateRecipe}
-                onRecipeImageUpload={onRecipeImageUpload}
-                recipeParams={recipeParams}
-                setRecipeParams={setRecipeParams}
-              />
-            )}
             {(!mobileSize || (mobileSize && !showMobileNav)) && (
+              <div className="container">
+              {!modalOpen && (
               <Switch>
                 <Route exact path="/">
                   {Object.keys(selectedRecipe).length > 0 ? (
@@ -242,6 +255,7 @@ const Main = ({ user, onLogout }) => {
                       onRecipeEdit={onRecipeEdit}
                       onRecipeDelete={onRecipeDelete}
                       onAddToList={addIngredientsToList}
+                      onUploadImageToRecipe={onUploadImageToRecipe}
                     />
                   ) : null}
                 </Route>
@@ -254,6 +268,18 @@ const Main = ({ user, onLogout }) => {
                   />
                 </Route>
               </Switch>
+              )}
+              {modalOpen && (
+                <RecipeForm
+                  toggleRecipeModal={setModalOpen}
+                  onSubmit={onCreateRecipe}
+                  onRecipeImageUpload={onRecipeImageUpload}
+                  recipeParams={recipeParams}
+                  recipeParamsErrors={recipeParamsErrors}
+                  setRecipeParams={setRecipeParams}
+                />
+              )}
+              </div>
             )}
             {mobileSize && (
               <span>
@@ -262,7 +288,7 @@ const Main = ({ user, onLogout }) => {
                     query={query}
                     onQueryChange={handleQueryChange}
                     recipes={searchResults}
-                    activeRecipe={selectedRecipeIndex}
+                    activeRecipe={selectedRecipeId}
                     recipeToSelect={selectNewRecipe}
                     toggleRecipeModal={setModalOpen}
                   />

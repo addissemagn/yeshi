@@ -5,37 +5,13 @@ import ImageUpload from './ImageUpload';
 import api from '../api';
 
 const RecipeForm = ({
-  onAddToList,
-  onDeleteFromList,
   toggleRecipeModal,
-  initialRecipe,
   onSubmit,
   onRecipeImageUpload,
   recipeParams,
+  recipeParamsErrors,
   setRecipeParams,
 }) => {
-  const [activeTab, setActiveTab] = useState("groceries");
-  const [ingredientToAdd, setIngredientToAdd] = useState("");
-
-  const addIngredient = (e) => {
-    e.preventDefault();
-    onAddToList([ingredientToAdd], activeTab);
-    setIngredientToAdd("");
-  };
-
-  const deleteIngredient = (index, tab) => {
-    onDeleteFromList(index, activeTab);
-  };
-
-  const getList = (items) =>
-    items.map((item, i) => (
-      <li key={i} value={i}>
-        <span className="Recipe__ingredients__status green"></span>
-        {item}
-        <span onClick={() => deleteIngredient(i)}> x</span>
-      </li>
-    ));
-
   const onRecipeChange = (e) => {
     const { id, value } = e.target;
     const key = id.split("_")[0];
@@ -104,9 +80,19 @@ const RecipeForm = ({
           value={recipeParams.title}
           onChange={onRecipeChange}
         />
+        {recipeParamsErrors.title ? (
+          <p className="RecipeForm__error">{recipeParamsErrors.title}</p>
+        ) : (
+          ""
+        )}
         <div className="RecipeForm__section-header">
           <h3>Ingredients</h3>
-          <button onClick={() => addToRecipe("ingredients")}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              addToRecipe("ingredients");
+            }}
+          >
             <span role="img" aria-label="add">
               ➕
             </span>
@@ -122,16 +108,33 @@ const RecipeForm = ({
               value={ingredient}
               onChange={onRecipeChange}
             />
-            <button onClick={() => removeItem("ingredients", i)}>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                removeItem("ingredients", i);
+              }}
+            >
               <span role="img" aria-label="delete step">
                 ✖️
               </span>
             </button>
           </div>
         ))}
+        {recipeParamsErrors.ingredients && (
+          <p className="RecipeForm__error">{recipeParamsErrors.ingredients}</p>
+        )}
         <div className="RecipeForm__section-header">
           <h3>Steps</h3>
-          <button onClick={() => addToRecipe("steps")}>➕</button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              addToRecipe("steps");
+            }}
+          >
+            <span role="img" aria-label="add step">
+              ➕
+            </span>
+          </button>
         </div>
         {recipeParams.steps.map((step, i) => (
           <div className="RecipeForm__item">
@@ -143,13 +146,23 @@ const RecipeForm = ({
               value={step}
               onChange={onRecipeChange}
             />
-            <button onClick={() => removeItem("steps", i)}>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                removeItem("steps", i);
+              }}
+            >
               <span role="img" aria-label="delete step">
                 ✖️
               </span>
             </button>
           </div>
         ))}
+        {recipeParamsErrors.steps ? (
+          <p className="RecipeForm__error">{recipeParamsErrors.steps}</p>
+        ) : (
+          ""
+        )}
         <button
           className="Recipe__button Navigation__button-active mt-22"
           onClick={(e) => onSubmit(e, recipeParams)}

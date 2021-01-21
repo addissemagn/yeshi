@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import ImageUploadMultiple from './ImageUploadMultiple';
+
 const Ingredient = ({ ingredient, i, haveIngredient }) => (
   <li key={i}>
     <span
@@ -23,14 +25,13 @@ const Recipe = ({
   onRecipeEdit,
   onRecipeDelete,
   onAddToList,
+  onUploadImageToRecipe,
 }) => {
-  const { title, ingredients, steps } = recipe;
-
   const missingInInventory = [];
   const missingInGroceryList = [];
 
   const haveIngredient = (ingredient) => {
-    if (!groceryList.includes(ingredient)) {
+    if (!groceryList.includes(ingredient) && !inventory.includes(ingredient)) {
       missingInGroceryList.push(ingredient);
     }
 
@@ -46,7 +47,7 @@ const Recipe = ({
   const deleteRecipe = () => onRecipeDelete(recipe.id);
   const addToGroceryList = () => onAddToList(missingInInventory, "groceries");
 
-  const ingredientsList = ingredients.map((ingredient, i) => (
+  const ingredientsList = recipe.ingredients && recipe.ingredients.map((ingredient, i) => (
     <Ingredient
       ingredient={ingredient}
       i={i}
@@ -54,17 +55,19 @@ const Recipe = ({
       haveIngredient={haveIngredient(ingredient)}
     />
   ));
-  const stepsList = steps.map((step, i) => <Step step={step} i={i} />);
+
+  const stepsList = recipe.steps && recipe.steps.map((step, i) => <Step step={step} i={i} />);
+  const notesList = recipe.notes && recipe.notes.map((note, i) => <Step step={note} i={i} />);
+  const imagesList = recipe.images && recipe.images.map((image, i) => (
+    <li key={i}>
+      <img src={image.url} width="300px"/>
+      <span className="Recipe__images">{image.caption}</span>
+    </li>
+  ));
 
   return (
     <div className="Recipe">
-      <h2 className="Recipe__title">{title}</h2>
-
-      <h3 className="Recipe__sub-title">Ingredients</h3>
-      <ul className="Recipe__ingredients">{ingredientsList}</ul>
-
-      <h3 className="Recipe__sub-title">Preparation</h3>
-      <ol className="Recipe__steps">{stepsList}</ol>
+      <h2 className="Recipe__title">{recipe.title}</h2>
 
       <div className="Recipe__button-container">
         {missingInGroceryList.length > 0 ? (
@@ -96,6 +99,33 @@ const Recipe = ({
           </span>
         </button>
       </div>
+
+      { recipe.ingredients && (
+        <span>
+          <h3 className="Recipe__sub-title">Ingredients</h3>
+          <ul className="Recipe__ingredients">{ingredientsList}</ul>
+        </span>
+      )}
+      { recipe.steps && (
+        <span>
+          <h3 className="Recipe__sub-title">Preparation</h3>
+          <ol className="Recipe__steps">{stepsList}</ol>
+        </span>
+      )}
+      { recipe.notes && (
+        <span>
+          <h3 className="Recipe__sub-title">Notes</h3>
+          <ol className="Recipe__steps">{notesList}</ol>
+        </span>
+      )}
+
+      { recipe.images && (
+        <span>
+          <h3 className="Recipe__sub-title">Images</h3>
+          <ol className="Recipe__images">{imagesList}</ol>
+        </span>
+      )}
+      <ImageUploadMultiple onUpload={onUploadImageToRecipe}/>
     </div>
   );
 };

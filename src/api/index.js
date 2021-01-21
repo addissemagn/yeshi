@@ -110,7 +110,6 @@ const api = {
         method: "POST",
         body: formData,
         headers: {
-          // "Content-Type": "multipart/form-data; boundary=<calculated when request is sent>",
           token: token,
         },
       });
@@ -120,7 +119,30 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  uploadImagesToRecipe: async (cookbookId, files, token) => {
+    let formData = new FormData();
+    let imgKeys = Object.keys(files);
+    console.log(files)
 
+    for (var i = 0; i < imgKeys.length; i++) {
+      formData.append("image", files[i]);
+    }
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/cookbook/${cookbookId}/upload`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          token: token,
+        },
+      });
+
+      const updatedCookbook = await res.json();
+      return updatedCookbook;
+    } catch (err) {
+      console.log(err);
+    }
   }
 };
 

@@ -10,14 +10,33 @@ export const eraseCookie = (name) => {
     document.cookie = name+'=; Max-Age=-99999999;';
 }
 
-export const validateLoginParams = (obj) => {
-  const { username, password } = obj;
+export const validateParams = (obj, type) => {
+  const { username, password, name } = obj;
 
-  if (!username) {
+  if (type === "signup" && !name) {
+    return "Name is required";
+  } else if (!username) {
     return "Username is required";
   } else if (!password) {
     return "Password is required";
   }
 
   return "";
+};
+
+export const validateRecipe = (recipe) => {
+  const errs = {};
+  if (!recipe.title) {
+    errs.title = "Required";
+  }
+
+  if (recipe.ingredients.length == 0) {
+    errs.ingredients = "Minimum 1 ingredient";
+  }
+
+  if (recipe.steps.length == 0) {
+    errs.steps = "Minimum 1 step";
+  }
+
+  return errs;
 };
