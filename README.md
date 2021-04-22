@@ -3,9 +3,6 @@
 
 
 # demo
-#### January 21, 2021
+### January 21, 2021
 
-<video width="320" height="240" controls>
-  <source src="/assets/yeshi_demo.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video>
+[Demo](https://user-images.githubusercontent.com/34951824/115641274-b4893200-a2e6-11eb-9a16-632a3fb80294.mp4)
